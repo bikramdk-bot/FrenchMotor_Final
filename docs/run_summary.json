@@ -1,0 +1,152 @@
+{
+  "demo_name": "Example A: Small Public Demo",
+  "description": "Finite 5-world x 3-frequency-model x 3-severity-model x 10-year lattice with one locked retraining regime.",
+  "years": 10,
+  "seed": 20260513,
+  "version": "example_a_v1",
+  "retraining_regime": "annual_locked",
+  "training_base_year": -1,
+  "training_base_source": "French motor data",
+  "training_window_rule": "Year 1 uses a 1-year initial training window; Year 2 onward uses a rolling 2-year window through the prior year.",
+  "source_lineage": {
+    "source_name": "French Motor third-party liability raw data",
+    "source_files": [
+      "data/raw/freMTPL2freq.csv",
+      "data/raw/freMTPL2sev.csv"
+    ],
+    "root_year": 0,
+    "root_checkpoint_id": "root_y0_french_motor_public_demo",
+    "root_checkpoint_label": "French Motor Root",
+    "root_checkpoint_note": "Observed French Motor calibration layer used as the reproducibility root for the public demo."
+  },
+  "target_model_note": "Frequency and severity models are chosen separately; pure premium RMSE combines frequency RMSE and severity RMSE.",
+  "step_note": "Base year -1 uses French motor data; Year 1 trains on one prior-year slice, then Year 2 onward uses a rolling 2-year window.",
+  "world_count": 5,
+  "frequency_model_count": 3,
+  "severity_model_count": 3,
+  "checkpoint_count": 450,
+  "transition_count": 18225,
+  "full_paths_from_one_initial_state": 756680642578125,
+  "storage_rule": "Store reusable yearly checkpoints and transitions, not duplicated full paths.",
+  "world_catalog": [
+    {
+      "world_id": "stable_baseline",
+      "label": "Stable Baseline",
+      "frequency_stress": 0.16,
+      "severity_stress": 0.16,
+      "volatility": 0.08,
+      "narrative": "Mild drift and low stress keep the portfolio close to historic behavior."
+    },
+    {
+      "world_id": "good_years",
+      "label": "Good Years",
+      "frequency_stress": 0.07,
+      "severity_stress": 0.08,
+      "volatility": 0.05,
+      "narrative": "Frequency and severity are both low, creating a favorable underwriting environment."
+    },
+    {
+      "world_id": "mobility_suppression",
+      "label": "Mobility Suppression",
+      "frequency_stress": 0.34,
+      "severity_stress": 0.18,
+      "volatility": 0.25,
+      "narrative": "Frequency changes unevenly as driving patterns shift, while severity pressure stays moderate."
+    },
+    {
+      "world_id": "pandemic_recovery_inflation",
+      "label": "Recovery Inflation",
+      "frequency_stress": 0.32,
+      "severity_stress": 0.45,
+      "volatility": 0.22,
+      "narrative": "Recovery demand returns while repair inflation and claim severity remain elevated."
+    },
+    {
+      "world_id": "self_drive_revolution",
+      "label": "Self-Drive Revolution",
+      "frequency_stress": 0.38,
+      "severity_stress": 0.52,
+      "volatility": 0.3,
+      "narrative": "Frequency changes unevenly as automated driving adoption spreads, while higher repair complexity lifts severity."
+    }
+  ],
+  "model_catalog": [
+    {
+      "model_family": "baseline_tariff",
+      "label": "Baseline Tariff",
+      "base_error": 0.34,
+      "adaptation": 0.1,
+      "stability": 0.9,
+      "complexity_skill": 0.04,
+      "calm_generalization": 0.18,
+      "overfit_sensitivity": 0.04,
+      "narrative": "Stable reference model that is slow to adapt when the world changes.",
+      "model_info": "A fixed tariff benchmark. It uses pre-set rating relativities and updates slowly, so it is useful as a stable baseline rather than an adaptive learner."
+    },
+    {
+      "model_family": "GLM",
+      "label": "GLM",
+      "base_error": 0.22,
+      "adaptation": 0.48,
+      "stability": 0.82,
+      "complexity_skill": 0.32,
+      "calm_generalization": 0.72,
+      "overfit_sensitivity": 0.12,
+      "narrative": "Stable learner that performs well when good or stable years repeat in the rolling window.",
+      "model_info": "A generalized linear model. It learns transparent frequency and severity relationships from the rolling 2-year window, generalizes well in stable/good years, and is less prone to overfitting short calm history."
+    },
+    {
+      "model_family": "XGBoost",
+      "label": "XGBoost",
+      "base_error": 0.18,
+      "adaptation": 0.74,
+      "stability": 0.52,
+      "complexity_skill": 0.86,
+      "calm_generalization": 0.16,
+      "overfit_sensitivity": 0.62,
+      "narrative": "Aggressive learner that shines in volatile or complex worlds but can overfit short calm history.",
+      "model_info": "A gradient-boosted tree model. It captures nonlinear frequency and severity patterns in complex worlds, but the short rolling 2-year window can overfit when stable or good years repeat."
+    }
+  ],
+  "public_world_path": [
+    "stable_baseline",
+    "stable_baseline",
+    "good_years",
+    "pandemic_recovery_inflation",
+    "pandemic_recovery_inflation",
+    "pandemic_recovery_inflation",
+    "pandemic_recovery_inflation",
+    "self_drive_revolution",
+    "stable_baseline",
+    "good_years"
+  ],
+  "public_world_path_rule": "Seeded stochastic autocorrelated scenario: worlds tend to persist and often move along a natural order, but can stay longer, move early, or step back.",
+  "public_checkpoint_path": [
+    "chk_y1_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y2_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y3_good_years_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y4_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y5_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y6_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y7_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y8_self_drive_revolution_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y9_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+    "chk_y10_good_years_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1"
+  ],
+  "public_transition_path": [
+    "tr_y1_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_to_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y2_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_to_good_years_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y3_good_years_freq_baseline_tariff_sev_baseline_tariff_to_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y4_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_to_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y5_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_to_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y6_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_to_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y7_pandemic_recovery_inflation_freq_baseline_tariff_sev_baseline_tariff_to_self_drive_revolution_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y8_self_drive_revolution_freq_baseline_tariff_sev_baseline_tariff_to_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1",
+    "tr_y9_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_to_good_years_freq_baseline_tariff_sev_baseline_tariff_s20260513_example_a_v1"
+  ],
+  "public_checkpoint_path_rule": "Walk the graph along the seeded public world path while keeping the current frequency and severity model families fixed between yearly boundaries.",
+  "initial_checkpoint_id": "chk_y1_stable_baseline_freq_baseline_tariff_sev_baseline_tariff_annual_locked_s20260513_example_a_v1",
+  "root_checkpoint_id": "root_y0_french_motor_public_demo",
+  "artifact_label": "example_a_lattice",
+  "public_root_checkpoint_id": "root_y0_french_motor_public_demo"
+}
