@@ -1,0 +1,31 @@
+{
+  "event_types": [
+    "session_start",
+    "year_boundary_choice",
+    "playback_step",
+    "session_complete"
+  ],
+  "session_start": [
+    "session_id",
+    "initial_checkpoint_id",
+    "retraining_regime",
+    "seed",
+    "version"
+  ],
+  "year_boundary_choice": [
+    "session_id",
+    "boundary_year",
+    "transition_id",
+    "from_checkpoint_id",
+    "to_checkpoint_id"
+  ],
+  "playback_step": [
+    "session_id",
+    "current_checkpoint_id"
+  ],
+  "session_complete": [
+    "session_id",
+    "final_checkpoint_id",
+    "chosen_transition_ids"
+  ]
+}
