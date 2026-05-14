@@ -1,0 +1,40 @@
+# Python environments and build outputs
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment and local secrets
+.env
+*.env
+
+# Public data cache and generated datasets
+public_data/
+data/interim/
+data/curated/
+data/model_input/
+data/simulated/
+data/
+
+# Generated model and reporting artifacts
+modeling/artifacts/
+reports/models/
+reports/metadata/
+reports/published/*
+!reports/published/latest/
+reports/published/latest/*
+!reports/published/latest/example_a_public_demo/
+reports/published/latest/example_a_public_demo/*
+!reports/published/latest/example_a_public_demo/index.html
+!reports/published/latest/example_a_public_demo/public.html
+reports/*.html
+reports/*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
