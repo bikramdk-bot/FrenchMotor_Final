@@ -232,7 +232,7 @@ def build_example_a_dashboard_html(data: dict[str, Any]) -> str:
         </div>
         <div>
           <div class="label">Step</div>
-          <button class="primary" id="advanceButton">Advance 1 Year</button>
+          <button class="primary" id="advanceButton">Advance Year [R]</button>
         </div>
         <div>
           <div class="label">Session</div>
@@ -698,7 +698,7 @@ def build_example_a_public_html(data: dict[str, Any]) -> str:
       </div>
       <div class="actions">
         <div class="advance-group">
-          <button class="primary" id="advanceButton">Advance 1 Year</button>
+          <button class="primary" id="advanceButton">Advance Year [R]</button>
           <button class="primary" id="advanceFiveButton">Advance 5 Years</button>
         </div>
         <button id="resetButton">Start Over</button>
