@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import html
 import json
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,72 @@ def load_example_a_dashboard_data(artifact_dir: str | Path) -> dict[str, Any]:
         "checkpoints": _load_csv(root / "yearly_checkpoints.csv"),
         "transitions": _load_csv(root / "yearly_transitions.csv"),
     }
+
+
+def _world_complexity(world: dict[str, Any]) -> float:
+    return (
+        (float(world["frequency_stress"]) * 0.34)
+        + (float(world["severity_stress"]) * 0.42)
+        + (float(world["volatility"]) * 0.24)
+    )
+
+
+def _is_calm_world(world: dict[str, Any]) -> bool:
+    return str(world["world_id"]) in {"stable_baseline", "good_years"}
+
+
+def _sequence_adjustment_breakdown(
+    source_world: dict[str, Any],
+    target_world: dict[str, Any],
+    model: dict[str, Any],
+) -> dict[str, Any]:
+    source_complexity = _world_complexity(source_world)
+    target_complexity = _world_complexity(target_world)
+    stress_shift = abs(float(source_world["frequency_stress"]) - float(target_world["frequency_stress"]))
+    stress_shift += abs(float(source_world["severity_stress"]) - float(target_world["severity_stress"]))
+    stress_shift += abs(float(source_world["volatility"]) - float(target_world["volatility"]))
+
+    same_world = source_world["world_id"] == target_world["world_id"]
+    calm_pair = _is_calm_world(source_world) and _is_calm_world(target_world)
+    average_complexity = (source_complexity + target_complexity) / 2.0
+
+    stable_window_bonus = 0.0
+    if calm_pair:
+        stable_window_bonus = (float(model["stability"]) * 0.025) + (float(model["calm_generalization"]) * 0.050)
+    elif same_world:
+        stable_window_bonus = float(model["stability"]) * 0.018
+
+    calm_overfit_penalty = 0.0
+    if calm_pair:
+        calm_overfit_penalty = float(model["overfit_sensitivity"]) * 0.240
+    elif average_complexity < 0.18:
+        calm_overfit_penalty = float(model["overfit_sensitivity"]) * (0.18 - average_complexity) * 0.22
+
+    shock_penalty = stress_shift * (1.0 - float(model["complexity_skill"])) * 0.045
+    complexity_bonus = max(0.0, target_complexity - 0.20) * float(model["complexity_skill"]) * 0.10
+    sequence_adjustment = calm_overfit_penalty + shock_penalty - stable_window_bonus - complexity_bonus
+
+    return {
+        "source_complexity": source_complexity,
+        "target_complexity": target_complexity,
+        "stress_shift": stress_shift,
+        "same_world": same_world,
+        "calm_pair": calm_pair,
+        "average_complexity": average_complexity,
+        "calm_overfit_penalty": calm_overfit_penalty,
+        "shock_penalty": shock_penalty,
+        "stable_window_bonus": stable_window_bonus,
+        "complexity_bonus": complexity_bonus,
+        "sequence_adjustment": sequence_adjustment,
+    }
+
+
+def _fmt(value: float) -> str:
+    return f"{value:.6f}"
+
+
+def _esc(value: Any) -> str:
+    return html.escape(str(value), quote=True)
 
 
 def build_example_a_dashboard_html(data: dict[str, Any]) -> str:
@@ -559,7 +626,8 @@ def build_example_a_public_html(data: dict[str, Any]) -> str:
     .pie-legend {{ display: grid; grid-template-columns: 1fr; gap: 4px; text-align: left; margin-top: 8px; }}
     .legend-item {{ display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }}
     .legend-dot {{ width: 8px; height: 8px; border-radius: 50%; }}
-    .top-link {{ display: inline-flex; margin-top: 16px; color: var(--teal); font-weight: 700; text-decoration: none; font-size: 14px; }}
+    .top-actions {{ display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }}
+    .top-link {{ display: inline-flex; color: var(--teal); font-weight: 700; text-decoration: none; font-size: 14px; }}
     .section {{ margin-top: 18px; }}
     .panel {{ border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 18px; }}
     .choices {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }}
@@ -606,7 +674,9 @@ def build_example_a_public_html(data: dict[str, Any]) -> str:
       <div class="hero-text">
         <h1>Can you manage MTPL risk under uncertainty?</h1>
         <p class="lede">Choose frequency and severity model types, then advance one year. The next insurance world is revealed after each recalculation across ten yearly decisions.</p>
-        <a class="top-link" href="info.html">Understand assumptions behind &rarr;</a>
+        <div class="top-actions">
+          <a class="top-link" href="info.html">Understand assumptions behind &rarr;</a>
+        </div>
       </div>
       <div class="forecast-box">
         <span class="label">Next World Probability</span>
@@ -1245,33 +1315,46 @@ def build_example_a_info_html(data: dict[str, Any]) -> str:
     .shell { max-width: 1000px; margin: 0 auto; padding: 40px 20px 80px; }
     header { margin-bottom: 40px; }
     h1 { font-family: Georgia, serif; font-size: 48px; margin: 0 0 10px; line-height: 1.1; }
-    .subtitle { font-size: 20px; color: var(--muted); max-width: 700px; }
+    .subtitle { font-size: 20px; color: var(--muted); max-width: 760px; }
     .nav-links { margin-top: 20px; display: flex; gap: 20px; font-weight: 700; }
     .nav-links a { color: var(--teal); text-decoration: none; }
+    .detail-link { display: inline-flex; margin-top: 10px; color: var(--teal); font-weight: 700; text-decoration: none; }
     .section { margin-top: 60px; }
     h2 { font-family: Georgia, serif; font-size: 32px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 30px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 24px; }
     .card h3 { margin-top: 0; color: var(--teal); }
+    .lead { max-width: 820px; color: var(--muted); }
+    .tagline { color: var(--muted); font-size: 13px; margin-top: -8px; }
     .matrix-wrap { overflow-x: auto; margin-top: 20px; }
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-    th, td { padding: 12px; text-align: center; border: 1px solid var(--line); }
+    th, td { padding: 12px; text-align: center; border: 1px solid var(--line); vertical-align: top; }
     th { background: rgba(15, 118, 110, 0.05); color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    td.left, th.left { text-align: left; }
     .highlight { background: rgba(15, 118, 110, 0.1); font-weight: 700; color: var(--teal); }
-    .formula { font-family: 'Courier New', Courier, monospace; background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px; margin: 20px 0; }
+    .formula { font-family: 'Courier New', Courier, monospace; background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.5; margin: 20px 0; white-space: pre-wrap; }
+    .signal { display: inline-block; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 700; background: rgba(15, 118, 110, 0.12); color: var(--teal); }
+    .signal.warn { background: rgba(180, 83, 9, 0.14); color: var(--amber); }
+    .signal.risk { background: rgba(190, 18, 60, 0.12); color: var(--red); }
     .graphic-box { height: 200px; background: white; border: 1px solid var(--line); border-radius: 8px; margin-top: 15px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
     .world-bubble { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid var(--teal); background: white; z-index: 2; }
     .arrow { position: absolute; height: 2px; background: var(--teal); opacity: 0.3; }
-    .hint-box { background: linear-gradient(135deg, #0f766e 0%, #1d4ed8 100%); color: white; padding: 30px; border-radius: 12px; margin-top: 40px; box-shadow: 0 10px 25px rgba(15, 118, 110, 0.2); }
+    .hint-box { background: linear-gradient(135deg, #0f766e 0%, #1d4ed8 100%); color: white; padding: 30px; border-radius: 8px; margin-top: 40px; box-shadow: 0 10px 25px rgba(15, 118, 110, 0.2); }
     .hint-box h3 { margin-top: 0; color: white; }
     .tag { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.2); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    @media (max-width: 620px) {
+      .shell { padding: 28px 16px 56px; }
+      h1 { font-size: 38px; }
+      h2 { font-size: 27px; }
+      th, td { padding: 10px 8px; }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
     <header>
       <h1>Simulation & Risk Design</h1>
-      <p class="subtitle">An intuitive guide to the physics, gamification, and world-switching mechanics of Example A.</p>
+      <p class="subtitle">How training on one insurance world affects model performance in the same world, a different world, and the three model families used in Example A.</p>
       <div class="nav-links">
         <a href="public.html">&larr; Back to Public GUI</a>
       </div>
@@ -1345,26 +1428,142 @@ def build_example_a_info_html(data: dict[str, Any]) -> str:
       <h2>Risk Physics: The RMSE Formula</h2>
       <p>Performance is measured by <strong>Pure Premium RMSE</strong>. This is not the total claims cost, but rather the <em>pricing error</em> of your selected model combination.</p>
       <div class="formula">
-frequency_rmse = base_error + (world.frequency_stress * 0.32) + (world.volatility * 0.10) - frequency_credit
+sequence_adjustment =
+  calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus
 
-severity_rmse = base_error + (world.severity_stress * 0.34) + (world.volatility * 0.08) - severity_credit
+frequency_rmse =
+  base_error
+  + (world.frequency_stress * 0.32)
+  + (world.volatility * 0.10)
+  - frequency_credit
+  + sequence_adjustment
+
+severity_rmse =
+  base_error
+  + (world.severity_stress * 0.34)
+  + (world.volatility * 0.08)
+  - severity_credit
+  + sequence_adjustment
 
 pure_premium_rmse = (frequency_rmse * 0.48) + (severity_rmse * 0.52)
       </div>
-      <p>Lower RMSE is better. The "credit" depends on model adaptation and the size of the training window.</p>
+      <p>Lower RMSE is better. The "credit" depends on model adaptation and the size of the training window. The sequence adjustment is the transfer effect from the recent training world into the target world.</p>
+      <div class="formula">
+frequency_rmse =
+  base_error
+  + (world.frequency_stress * 0.32)
+  + (world.volatility * 0.10)
+  - frequency_credit
+  + calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus
+
+severity_rmse =
+  base_error
+  + (world.severity_stress * 0.34)
+  + (world.volatility * 0.08)
+  - severity_credit
+  + calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus
+
+pure_premium_rmse =
+  (frequency_rmse * 0.48)
+  + (severity_rmse * 0.52)
+      </div>
     </section>
 
     <section class="section">
-      <h2>Gamification: The 2-Year Window</h2>
-      <p>The simulation uses a <strong>Rolling 2-Year Training Window</strong> (from Year 2 onwards). This creates a strategic trade-off:</p>
+      <h2>Training World Transfer</h2>
+      <p class="lead">The model does not remember every past year. Year 1 uses a 1-year initial window, then Year 2 onward uses only the most recent 2 years. That short memory is what makes same-world repeats and world shifts behave differently.</p>
       <div class="grid">
         <div class="card">
-          <h3>Stable/Good Repeats</h3>
-          <p>Rewards <strong>Stability</strong> and <strong>Generalization</strong>. Simple models like GLM often outperform XGBoost here because they don't overfit the short history.</p>
+          <span class="signal">Same or similar world</span>
+          <h3>Training transfers well</h3>
+          <p>If the next world looks like the recent training window, the model is learning patterns it will actually face. Stable Baseline into Stable Baseline, or Stable Baseline into Good Years, rewards stability and calm generalization.</p>
+          <p class="tagline">In the simulation this can create a stable-window bonus and lower RMSE.</p>
         </div>
         <div class="card">
-          <h3>World Shifts / Jumps</h3>
-          <p>Rewards <strong>Complexity Skill</strong> and <strong>Adaptation</strong>. This is where XGBoost shines, as it can capture non-linear patterns that simpler models miss.</p>
+          <span class="signal warn">Different world</span>
+          <h3>Training transfers with a penalty</h3>
+          <p>When the next world has different frequency stress, severity stress, or volatility, the model is partly using outdated evidence. The bigger the shift, the more the model needs adaptation and complexity skill.</p>
+          <p class="tagline">The simulation adds a shock penalty when the source and target worlds differ.</p>
+        </div>
+        <div class="card">
+          <span class="signal risk">Short memory</span>
+          <h3>Recent years dominate</h3>
+          <p>The rolling 2-year window helps models react quickly, but it can also forget older regimes. A model that looks strong after two calm years may be fragile when the next world becomes volatile.</p>
+          <p class="tagline">This is why the best model can change from year to year.</p>
+        </div>
+      </div>
+
+      <div class="formula">
+sequence_adjustment =
+  calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus
+      </div>
+      <p class="lead">This adjustment is applied separately to the frequency model and the severity model before they are combined into pure premium RMSE.</p>
+      <p class="lead"><a class="detail-link" href="sequence_adjustment.html">Open exact sequence adjustment tables &rarr;</a></p>
+    </section>
+
+    <section class="section">
+      <h2>How The Models Tackle It</h2>
+      <div class="matrix-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Model</th>
+              <th class="left">When the world repeats</th>
+              <th class="left">When the world changes</th>
+              <th class="left">Best use in the game</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="left">Baseline Tariff</th>
+              <td class="left">Steady and easy to interpret, but it starts with a higher base error.</td>
+              <td class="left">Slowest to adapt. It carries the largest penalty when frequency, severity, or volatility shifts.</td>
+              <td class="left">A conservative reference point, not usually the RMSE-minimizing choice.</td>
+            </tr>
+            <tr>
+              <th class="left">GLM</th>
+              <td class="left">Strong in Stable Baseline and Good Years because it generalizes from short calm history without chasing noise.</td>
+              <td class="left">Handles moderate shifts, but can miss nonlinear patterns in high-volatility or high-severity worlds.</td>
+              <td class="left">Useful when recent years are calm, similar, or only mildly different from the next year.</td>
+            </tr>
+            <tr>
+              <th class="left">XGBoost</th>
+              <td class="left">Can overfit two calm years, so same-world calm repeats may not always reward it.</td>
+              <td class="left">Best complexity skill. It usually benefits most when the world becomes volatile, nonlinear, or structurally different.</td>
+              <td class="left">Useful for Mobility Suppression, Recovery Inflation, and Self-Drive Revolution, especially after a shock.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Frequency vs Severity Choices</h2>
+      <p class="lead">The game lets you choose a frequency model and a severity model separately. A world can be difficult on one side and manageable on the other, so the best pair does not have to use the same model twice.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>Frequency transfer</h3>
+          <p>Frequency RMSE reacts most to claim-count stress and volatility. A frequency shock favors models that adapt quickly to changed driving patterns.</p>
+        </div>
+        <div class="card">
+          <h3>Severity transfer</h3>
+          <p>Severity RMSE reacts most to claim-size stress and volatility. Inflation and repair complexity can make the severity side prefer a more flexible learner.</p>
+        </div>
+        <div class="card">
+          <h3>Pure premium result</h3>
+          <p>The final score combines both sides: 48% frequency RMSE and 52% severity RMSE. Lower pure premium RMSE is the objective.</p>
         </div>
       </div>
     </section>
@@ -1387,6 +1586,184 @@ pure_premium_rmse = (frequency_rmse * 0.48) + (severity_rmse * 0.52)
 """
 
 
+def build_example_a_sequence_adjustment_html(data: dict[str, Any]) -> str:
+    manifest = data["manifest"]
+    worlds = manifest["world_catalog"]
+    models = manifest["model_catalog"]
+
+    model_cards = []
+    model_tables = []
+    for model in models:
+        model_cards.append(
+            f"""
+        <div class="card">
+          <h3>{_esc(model["label"])}</h3>
+          <div class="mini-grid">
+            <span>Stability</span><strong>{_fmt(float(model["stability"]))}</strong>
+            <span>Complexity skill</span><strong>{_fmt(float(model["complexity_skill"]))}</strong>
+            <span>Calm generalization</span><strong>{_fmt(float(model["calm_generalization"]))}</strong>
+            <span>Overfit sensitivity</span><strong>{_fmt(float(model["overfit_sensitivity"]))}</strong>
+          </div>
+        </div>
+"""
+        )
+
+        rows = []
+        for source_world in worlds:
+            for target_world in worlds:
+                breakdown = _sequence_adjustment_breakdown(source_world, target_world, model)
+                if breakdown["same_world"]:
+                    switch_type = "Same world"
+                elif breakdown["calm_pair"]:
+                    switch_type = "Calm-to-calm shift"
+                else:
+                    switch_type = "Different world"
+                adjustment = breakdown["sequence_adjustment"]
+                tone = "down" if adjustment < 0 else "up" if adjustment > 0 else "flat"
+                effect = "Lowers RMSE" if adjustment < 0 else "Raises RMSE" if adjustment > 0 else "No transfer effect"
+                rows.append(
+                    f"""
+              <tr>
+                <td class="left">{_esc(source_world["label"])}</td>
+                <td class="left">{_esc(target_world["label"])}</td>
+                <td class="left">{switch_type}</td>
+                <td>{_fmt(breakdown["source_complexity"])}</td>
+                <td>{_fmt(breakdown["target_complexity"])}</td>
+                <td>{_fmt(breakdown["stress_shift"])}</td>
+                <td>{_fmt(breakdown["calm_overfit_penalty"])}</td>
+                <td>{_fmt(breakdown["shock_penalty"])}</td>
+                <td>{_fmt(breakdown["stable_window_bonus"])}</td>
+                <td>{_fmt(breakdown["complexity_bonus"])}</td>
+                <td class="{tone}">{_fmt(adjustment)}</td>
+                <td class="left">{effect}</td>
+              </tr>
+"""
+                )
+
+        model_tables.append(
+            f"""
+    <section class="section">
+      <h2>{_esc(model["label"])} Sequence Adjustment</h2>
+      <p class="lead">Use this table when {_esc(model["label"])} is selected for either frequency or severity. The same value is added to that side's RMSE for Year 2 onward.</p>
+      <div class="matrix-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Source World</th>
+              <th class="left">Target World</th>
+              <th class="left">Switch Type</th>
+              <th>Source Complexity</th>
+              <th>Target Complexity</th>
+              <th>Stress Shift</th>
+              <th>Calm Overfit Penalty</th>
+              <th>Shock Penalty</th>
+              <th>Stable Window Bonus</th>
+              <th>Complexity Bonus</th>
+              <th>Sequence Adjustment</th>
+              <th class="left">RMSE Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            {"".join(rows)}
+          </tbody>
+        </table>
+      </div>
+    </section>
+"""
+        )
+
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Example A | Sequence Adjustment Detail</title>
+  <style>
+    :root {{
+      --ink: #18212b;
+      --muted: #64707d;
+      --paper: #f5f0e8;
+      --panel: #fffaf1;
+      --line: rgba(24, 33, 43, 0.14);
+      --teal: #0f766e;
+      --red: #be123c;
+      --green: #4d7c0f;
+      --amber: #b45309;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+    }}
+    .shell {{ max-width: 1220px; margin: 0 auto; padding: 40px 18px 80px; }}
+    header {{ margin-bottom: 34px; }}
+    h1 {{ font-family: Georgia, serif; font-size: 46px; margin: 0 0 10px; line-height: 1.1; }}
+    h2 {{ font-family: Georgia, serif; font-size: 30px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin: 0 0 22px; }}
+    h3 {{ margin-top: 0; color: var(--teal); }}
+    .subtitle, .lead {{ color: var(--muted); max-width: 900px; }}
+    .nav-links {{ display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; font-weight: 700; }}
+    .nav-links a {{ color: var(--teal); text-decoration: none; }}
+    .section {{ margin-top: 48px; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }}
+    .card {{ background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }}
+    .mini-grid {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; font-size: 13px; }}
+    .mini-grid span {{ color: var(--muted); }}
+    .formula {{ font-family: 'Courier New', Courier, monospace; background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.5; margin: 20px 0; white-space: pre-wrap; }}
+    .matrix-wrap {{ overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: white; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1120px; }}
+    th, td {{ padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }}
+    th {{ background: rgba(15, 118, 110, 0.06); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0; }}
+    .left {{ text-align: left; }}
+    .up {{ color: var(--red); font-weight: 700; }}
+    .down {{ color: var(--green); font-weight: 700; }}
+    .flat {{ color: var(--muted); font-weight: 700; }}
+    .note {{ color: var(--muted); font-size: 12px; margin-top: 12px; }}
+    @media (max-width: 620px) {{
+      .shell {{ padding: 28px 14px 56px; }}
+      h1 {{ font-size: 36px; }}
+      h2 {{ font-size: 25px; }}
+    }}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>Sequence Adjustment Detail</h1>
+      <p class="subtitle">Exact Year 2+ transfer values used when the model trained on one world is applied to the next target world. Positive adjustment raises RMSE; negative adjustment lowers RMSE.</p>
+      <div class="nav-links">
+        <a href="info.html">&larr; Back to Info</a>
+        <a href="public.html">Open Public GUI</a>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2>Formula</h2>
+      <div class="formula">sequence_adjustment =
+  calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus</div>
+      <p class="lead">The value is calculated per model family and per source-target world pair. If frequency uses GLM and severity uses XGBoost, use the GLM row for frequency RMSE and the XGBoost row for severity RMSE.</p>
+    </section>
+
+    <section class="section">
+      <h2>Model Inputs</h2>
+      <div class="grid">
+        {"".join(model_cards)}
+      </div>
+      <p class="note">Source complexity = frequency_stress * 0.34 + severity_stress * 0.42 + volatility * 0.24. Stress shift is the absolute movement in frequency stress, severity stress, and volatility.</p>
+    </section>
+
+    {"".join(model_tables)}
+  </main>
+</body>
+</html>
+"""
+
+
 def build_example_a_dashboard(artifact_dir: str | Path, output_dir: str | Path | None = None) -> Path:
     artifact_path = Path(artifact_dir)
     target_dir = Path(output_dir) if output_dir is not None else artifact_path
@@ -1397,6 +1774,9 @@ def build_example_a_dashboard(artifact_dir: str | Path, output_dir: str | Path |
     output_path.write_text(html, encoding="utf-8")
     public_html = build_example_a_public_html(data)
     (target_dir / "index.html").write_text(public_html, encoding="utf-8")
+    (target_dir / "public.html").write_text(public_html, encoding="utf-8")
     info_html = build_example_a_info_html(data)
     (target_dir / "info.html").write_text(info_html, encoding="utf-8")
+    sequence_adjustment_html = build_example_a_sequence_adjustment_html(data)
+    (target_dir / "sequence_adjustment.html").write_text(sequence_adjustment_html, encoding="utf-8")
     return output_path

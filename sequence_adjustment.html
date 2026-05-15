@@ -1,0 +1,1328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Example A | Sequence Adjustment Detail</title>
+  <style>
+    :root {
+      --ink: #18212b;
+      --muted: #64707d;
+      --paper: #f5f0e8;
+      --panel: #fffaf1;
+      --line: rgba(24, 33, 43, 0.14);
+      --teal: #0f766e;
+      --red: #be123c;
+      --green: #4d7c0f;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    .shell { max-width: 1220px; margin: 0 auto; padding: 40px 18px 80px; }
+    header { margin-bottom: 34px; }
+    h1 { font-family: Georgia, serif; font-size: 46px; margin: 0 0 10px; line-height: 1.1; }
+    h2 { font-family: Georgia, serif; font-size: 30px; border-bottom: 1px solid var(--line); padding-bottom: 10px; margin: 0 0 22px; }
+    h3 { margin-top: 0; color: var(--teal); }
+    .subtitle, .lead { color: var(--muted); max-width: 900px; }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; font-weight: 700; }
+    .nav-links a { color: var(--teal); text-decoration: none; }
+    .section { margin-top: 48px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
+    .mini-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; font-size: 13px; }
+    .mini-grid span { color: var(--muted); }
+    .formula { font-family: 'Courier New', Courier, monospace; background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px; line-height: 1.5; margin: 20px 0; white-space: pre-wrap; }
+    .matrix-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: white; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1120px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; }
+    th { background: rgba(15, 118, 110, 0.06); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0; }
+    .left { text-align: left; }
+    .up { color: var(--red); font-weight: 700; }
+    .down { color: var(--green); font-weight: 700; }
+    .flat { color: var(--muted); font-weight: 700; }
+    .note { color: var(--muted); font-size: 12px; margin-top: 12px; }
+    @media (max-width: 620px) {
+      .shell { padding: 28px 14px 56px; }
+      h1 { font-size: 36px; }
+      h2 { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>Sequence Adjustment Detail</h1>
+      <p class="subtitle">Exact Year 2+ transfer values used when the model trained on one world is applied to the next target world. Positive adjustment raises RMSE; negative adjustment lowers RMSE.</p>
+      <div class="nav-links">
+        <a href="info.html">&larr; Back to Info</a>
+        <a href="public.html">Open Public GUI</a>
+      </div>
+    </header>
+
+    <section class="section">
+      <h2>Formula</h2>
+      <div class="formula">sequence_adjustment =
+  calm_overfit_penalty
+  + shock_penalty
+  - stable_window_bonus
+  - complexity_bonus</div>
+      <p class="lead">The value is calculated per model family and per source-target world pair. If frequency uses GLM and severity uses XGBoost, use the GLM row for frequency RMSE and the XGBoost row for severity RMSE.</p>
+    </section>
+
+    <section class="section">
+      <h2>Model Inputs</h2>
+      <div class="grid">
+        
+        <div class="card">
+          <h3>Baseline Tariff</h3>
+          <div class="mini-grid">
+            <span>Stability</span><strong>0.900000</strong>
+            <span>Complexity skill</span><strong>0.040000</strong>
+            <span>Calm generalization</span><strong>0.180000</strong>
+            <span>Overfit sensitivity</span><strong>0.040000</strong>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>GLM</h3>
+          <div class="mini-grid">
+            <span>Stability</span><strong>0.820000</strong>
+            <span>Complexity skill</span><strong>0.320000</strong>
+            <span>Calm generalization</span><strong>0.720000</strong>
+            <span>Overfit sensitivity</span><strong>0.120000</strong>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>XGBoost</h3>
+          <div class="mini-grid">
+            <span>Stability</span><strong>0.520000</strong>
+            <span>Complexity skill</span><strong>0.860000</strong>
+            <span>Calm generalization</span><strong>0.160000</strong>
+            <span>Overfit sensitivity</span><strong>0.620000</strong>
+          </div>
+        </div>
+
+      </div>
+      <p class="note">Source complexity = frequency_stress * 0.34 + severity_stress * 0.42 + volatility * 0.24. Stress shift is the absolute movement in frequency stress, severity stress, and volatility.</p>
+    </section>
+
+    
+    <section class="section">
+      <h2>Baseline Tariff Sequence Adjustment</h2>
+      <p class="lead">Use this table when Baseline Tariff is selected for either frequency or severity. The same value is added to that side's RMSE for Year 2 onward.</p>
+      <div class="matrix-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Source World</th>
+              <th class="left">Target World</th>
+              <th class="left">Switch Type</th>
+              <th>Source Complexity</th>
+              <th>Target Complexity</th>
+              <th>Stress Shift</th>
+              <th>Calm Overfit Penalty</th>
+              <th>Shock Penalty</th>
+              <th>Stable Window Bonus</th>
+              <th>Complexity Bonus</th>
+              <th>Sequence Adjustment</th>
+              <th class="left">RMSE Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Same world</td>
+                <td>0.140800</td>
+                <td>0.140800</td>
+                <td>0.000000</td>
+                <td>0.009600</td>
+                <td>0.000000</td>
+                <td>0.031500</td>
+                <td>0.000000</td>
+                <td class="down">-0.021900</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Good Years</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.140800</td>
+                <td>0.069400</td>
+                <td>0.200000</td>
+                <td>0.009600</td>
+                <td>0.008640</td>
+                <td>0.031500</td>
+                <td>0.000000</td>
+                <td class="down">-0.013260</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.251200</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.015984</td>
+                <td>0.000000</td>
+                <td>0.000205</td>
+                <td class="up">0.015779</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.350600</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.025488</td>
+                <td>0.000000</td>
+                <td>0.000602</td>
+                <td class="up">0.024886</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.419600</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.034560</td>
+                <td>0.000000</td>
+                <td>0.000878</td>
+                <td class="up">0.033682</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.069400</td>
+                <td>0.140800</td>
+                <td>0.200000</td>
+                <td>0.009600</td>
+                <td>0.008640</td>
+                <td>0.031500</td>
+                <td>0.000000</td>
+                <td class="down">-0.013260</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Good Years</td>
+                <td class="left">Same world</td>
+                <td>0.069400</td>
+                <td>0.069400</td>
+                <td>0.000000</td>
+                <td>0.009600</td>
+                <td>0.000000</td>
+                <td>0.031500</td>
+                <td>0.000000</td>
+                <td class="down">-0.021900</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.251200</td>
+                <td>0.570000</td>
+                <td>0.000173</td>
+                <td>0.024624</td>
+                <td>0.000000</td>
+                <td>0.000205</td>
+                <td class="up">0.024593</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.350600</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.034128</td>
+                <td>0.000000</td>
+                <td>0.000602</td>
+                <td class="up">0.033526</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.419600</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.043200</td>
+                <td>0.000000</td>
+                <td>0.000878</td>
+                <td class="up">0.042322</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.140800</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.015984</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.015984</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.069400</td>
+                <td>0.570000</td>
+                <td>0.000173</td>
+                <td>0.024624</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.024797</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Same world</td>
+                <td>0.251200</td>
+                <td>0.251200</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.016200</td>
+                <td>0.000205</td>
+                <td class="down">-0.016405</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.350600</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.013824</td>
+                <td>0.000000</td>
+                <td>0.000602</td>
+                <td class="up">0.013222</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.419600</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.018576</td>
+                <td>0.000000</td>
+                <td>0.000878</td>
+                <td class="up">0.017698</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.140800</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.025488</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.025488</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.069400</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.034128</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.034128</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.251200</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.013824</td>
+                <td>0.000000</td>
+                <td>0.000205</td>
+                <td class="up">0.013619</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Same world</td>
+                <td>0.350600</td>
+                <td>0.350600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.016200</td>
+                <td>0.000602</td>
+                <td class="down">-0.016802</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.419600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.009072</td>
+                <td>0.000000</td>
+                <td>0.000878</td>
+                <td class="up">0.008194</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.140800</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.034560</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.034560</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.069400</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.043200</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.043200</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.251200</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.018576</td>
+                <td>0.000000</td>
+                <td>0.000205</td>
+                <td class="up">0.018371</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.350600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.009072</td>
+                <td>0.000000</td>
+                <td>0.000602</td>
+                <td class="up">0.008470</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Same world</td>
+                <td>0.419600</td>
+                <td>0.419600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.016200</td>
+                <td>0.000878</td>
+                <td class="down">-0.017078</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>GLM Sequence Adjustment</h2>
+      <p class="lead">Use this table when GLM is selected for either frequency or severity. The same value is added to that side's RMSE for Year 2 onward.</p>
+      <div class="matrix-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Source World</th>
+              <th class="left">Target World</th>
+              <th class="left">Switch Type</th>
+              <th>Source Complexity</th>
+              <th>Target Complexity</th>
+              <th>Stress Shift</th>
+              <th>Calm Overfit Penalty</th>
+              <th>Shock Penalty</th>
+              <th>Stable Window Bonus</th>
+              <th>Complexity Bonus</th>
+              <th>Sequence Adjustment</th>
+              <th class="left">RMSE Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Same world</td>
+                <td>0.140800</td>
+                <td>0.140800</td>
+                <td>0.000000</td>
+                <td>0.028800</td>
+                <td>0.000000</td>
+                <td>0.056500</td>
+                <td>0.000000</td>
+                <td class="down">-0.027700</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Good Years</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.140800</td>
+                <td>0.069400</td>
+                <td>0.200000</td>
+                <td>0.028800</td>
+                <td>0.006120</td>
+                <td>0.056500</td>
+                <td>0.000000</td>
+                <td class="down">-0.021580</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.251200</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.011322</td>
+                <td>0.000000</td>
+                <td>0.001638</td>
+                <td class="up">0.009684</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.350600</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.018054</td>
+                <td>0.000000</td>
+                <td>0.004819</td>
+                <td class="up">0.013235</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.419600</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.024480</td>
+                <td>0.000000</td>
+                <td>0.007027</td>
+                <td class="up">0.017453</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.069400</td>
+                <td>0.140800</td>
+                <td>0.200000</td>
+                <td>0.028800</td>
+                <td>0.006120</td>
+                <td>0.056500</td>
+                <td>0.000000</td>
+                <td class="down">-0.021580</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Good Years</td>
+                <td class="left">Same world</td>
+                <td>0.069400</td>
+                <td>0.069400</td>
+                <td>0.000000</td>
+                <td>0.028800</td>
+                <td>0.000000</td>
+                <td>0.056500</td>
+                <td>0.000000</td>
+                <td class="down">-0.027700</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.251200</td>
+                <td>0.570000</td>
+                <td>0.000520</td>
+                <td>0.017442</td>
+                <td>0.000000</td>
+                <td>0.001638</td>
+                <td class="up">0.016324</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.350600</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.024174</td>
+                <td>0.000000</td>
+                <td>0.004819</td>
+                <td class="up">0.019355</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.419600</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.030600</td>
+                <td>0.000000</td>
+                <td>0.007027</td>
+                <td class="up">0.023573</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.140800</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.011322</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.011322</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.069400</td>
+                <td>0.570000</td>
+                <td>0.000520</td>
+                <td>0.017442</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.017962</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Same world</td>
+                <td>0.251200</td>
+                <td>0.251200</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.014760</td>
+                <td>0.001638</td>
+                <td class="down">-0.016398</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.350600</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.009792</td>
+                <td>0.000000</td>
+                <td>0.004819</td>
+                <td class="up">0.004973</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.419600</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.013158</td>
+                <td>0.000000</td>
+                <td>0.007027</td>
+                <td class="up">0.006131</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.140800</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.018054</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.018054</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.069400</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.024174</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.024174</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.251200</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.009792</td>
+                <td>0.000000</td>
+                <td>0.001638</td>
+                <td class="up">0.008154</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Same world</td>
+                <td>0.350600</td>
+                <td>0.350600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.014760</td>
+                <td>0.004819</td>
+                <td class="down">-0.019579</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.419600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.006426</td>
+                <td>0.000000</td>
+                <td>0.007027</td>
+                <td class="down">-0.000601</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.140800</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.024480</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.024480</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.069400</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.030600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.030600</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.251200</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.013158</td>
+                <td>0.000000</td>
+                <td>0.001638</td>
+                <td class="up">0.011520</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.350600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.006426</td>
+                <td>0.000000</td>
+                <td>0.004819</td>
+                <td class="up">0.001607</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Same world</td>
+                <td>0.419600</td>
+                <td>0.419600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.014760</td>
+                <td>0.007027</td>
+                <td class="down">-0.021787</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>XGBoost Sequence Adjustment</h2>
+      <p class="lead">Use this table when XGBoost is selected for either frequency or severity. The same value is added to that side's RMSE for Year 2 onward.</p>
+      <div class="matrix-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Source World</th>
+              <th class="left">Target World</th>
+              <th class="left">Switch Type</th>
+              <th>Source Complexity</th>
+              <th>Target Complexity</th>
+              <th>Stress Shift</th>
+              <th>Calm Overfit Penalty</th>
+              <th>Shock Penalty</th>
+              <th>Stable Window Bonus</th>
+              <th>Complexity Bonus</th>
+              <th>Sequence Adjustment</th>
+              <th class="left">RMSE Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Same world</td>
+                <td>0.140800</td>
+                <td>0.140800</td>
+                <td>0.000000</td>
+                <td>0.148800</td>
+                <td>0.000000</td>
+                <td>0.021000</td>
+                <td>0.000000</td>
+                <td class="up">0.127800</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Good Years</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.140800</td>
+                <td>0.069400</td>
+                <td>0.200000</td>
+                <td>0.148800</td>
+                <td>0.001260</td>
+                <td>0.021000</td>
+                <td>0.000000</td>
+                <td class="up">0.129060</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.251200</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.002331</td>
+                <td>0.000000</td>
+                <td>0.004403</td>
+                <td class="down">-0.002072</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.350600</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.003717</td>
+                <td>0.000000</td>
+                <td>0.012952</td>
+                <td class="down">-0.009235</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.140800</td>
+                <td>0.419600</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.005040</td>
+                <td>0.000000</td>
+                <td>0.018886</td>
+                <td class="down">-0.013846</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Calm-to-calm shift</td>
+                <td>0.069400</td>
+                <td>0.140800</td>
+                <td>0.200000</td>
+                <td>0.148800</td>
+                <td>0.001260</td>
+                <td>0.021000</td>
+                <td>0.000000</td>
+                <td class="up">0.129060</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Good Years</td>
+                <td class="left">Same world</td>
+                <td>0.069400</td>
+                <td>0.069400</td>
+                <td>0.000000</td>
+                <td>0.148800</td>
+                <td>0.000000</td>
+                <td>0.021000</td>
+                <td>0.000000</td>
+                <td class="up">0.127800</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.251200</td>
+                <td>0.570000</td>
+                <td>0.002687</td>
+                <td>0.003591</td>
+                <td>0.000000</td>
+                <td>0.004403</td>
+                <td class="up">0.001875</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.350600</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.004977</td>
+                <td>0.000000</td>
+                <td>0.012952</td>
+                <td class="down">-0.007975</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Good Years</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.069400</td>
+                <td>0.419600</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.006300</td>
+                <td>0.000000</td>
+                <td>0.018886</td>
+                <td class="down">-0.012586</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.140800</td>
+                <td>0.370000</td>
+                <td>0.000000</td>
+                <td>0.002331</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.002331</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.069400</td>
+                <td>0.570000</td>
+                <td>0.002687</td>
+                <td>0.003591</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.006278</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Same world</td>
+                <td>0.251200</td>
+                <td>0.251200</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.009360</td>
+                <td>0.004403</td>
+                <td class="down">-0.013763</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.350600</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.002016</td>
+                <td>0.000000</td>
+                <td>0.012952</td>
+                <td class="down">-0.010936</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.251200</td>
+                <td>0.419600</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.002709</td>
+                <td>0.000000</td>
+                <td>0.018886</td>
+                <td class="down">-0.016177</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.140800</td>
+                <td>0.590000</td>
+                <td>0.000000</td>
+                <td>0.003717</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.003717</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.069400</td>
+                <td>0.790000</td>
+                <td>0.000000</td>
+                <td>0.004977</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.004977</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.251200</td>
+                <td>0.320000</td>
+                <td>0.000000</td>
+                <td>0.002016</td>
+                <td>0.000000</td>
+                <td>0.004403</td>
+                <td class="down">-0.002387</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Same world</td>
+                <td>0.350600</td>
+                <td>0.350600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.009360</td>
+                <td>0.012952</td>
+                <td class="down">-0.022312</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Different world</td>
+                <td>0.350600</td>
+                <td>0.419600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.001323</td>
+                <td>0.000000</td>
+                <td>0.018886</td>
+                <td class="down">-0.017563</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Stable Baseline</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.140800</td>
+                <td>0.800000</td>
+                <td>0.000000</td>
+                <td>0.005040</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.005040</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Good Years</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.069400</td>
+                <td>1.000000</td>
+                <td>0.000000</td>
+                <td>0.006300</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td class="up">0.006300</td>
+                <td class="left">Raises RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Mobility Suppression</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.251200</td>
+                <td>0.430000</td>
+                <td>0.000000</td>
+                <td>0.002709</td>
+                <td>0.000000</td>
+                <td>0.004403</td>
+                <td class="down">-0.001694</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Recovery Inflation</td>
+                <td class="left">Different world</td>
+                <td>0.419600</td>
+                <td>0.350600</td>
+                <td>0.210000</td>
+                <td>0.000000</td>
+                <td>0.001323</td>
+                <td>0.000000</td>
+                <td>0.012952</td>
+                <td class="down">-0.011629</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+              <tr>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Self-Drive Revolution</td>
+                <td class="left">Same world</td>
+                <td>0.419600</td>
+                <td>0.419600</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.000000</td>
+                <td>0.009360</td>
+                <td>0.018886</td>
+                <td class="down">-0.028246</td>
+                <td class="left">Lowers RMSE</td>
+              </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>
